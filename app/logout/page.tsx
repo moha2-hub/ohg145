@@ -1,27 +1,37 @@
 'use client'
+
 import { useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { logoutAction } from '../actions/logout'
-
 
 export default function LogoutPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
   useEffect(() => {
-    // Call the server action
-    logoutAction().then(() => {
-      const role = searchParams.get('role')
-      if (role === 'admin') {
-        router.replace('/admin')
-      } else if (role === 'seller') {
-        router.replace('/seller')
-      } else if (role === 'customer') {
-        router.replace('/customer')
-      } else {
-        router.replace('/')
-      }
-    })
+    const role = searchParams?.get('role')
+
+    // Only proceed if role exists
+    if (role !== null) {
+      logoutAction().then(() => {
+        switch (role) {
+          case 'admin':
+            router.replace('/admin')
+            break
+          case 'seller':
+            router.replace('/seller')
+            break
+          case 'customer':
+            router.replace('/customer')
+            break
+          default:
+            router.replace('/')
+        }
+      })
+    } else {
+      // Optional: fallback for missing role
+      router.replace('/')
+    }
   }, [router, searchParams])
 
   return (
