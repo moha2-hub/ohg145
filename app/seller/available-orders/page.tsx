@@ -41,19 +41,38 @@ export default function AvailableOrdersPage() {
     try {
       const res = await fetch("/api/seller/available-orders")
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`)
+        setError(`HTTP error! status: ${res.status}`)
+        setOrders([])
+        setLoading(false)
+        return
       }
-
-      const data = await res.json()
+      const text = await res.text()
+      if (!text) {
+        setError("Empty response from server")
+        setOrders([])
+        setLoading(false)
+        return
+      }
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (e) {
+        setError("Invalid JSON response from server")
+        setOrders([])
+        setLoading(false)
+        return
+      }
       if (data.success) {
         setOrders(data.orders || [])
       } else {
-        throw new Error(data.error || "Failed to fetch orders")
+        setError(data.error || "Failed to fetch orders")
+        setOrders([])
       }
     } catch (error) {
       console.error("Fetch error:", error)
       setError("Failed to load orders. Please try again.")
       toast.error("Failed to load orders")
+      setOrders([])
     } finally {
       setLoading(false)
     }
