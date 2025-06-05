@@ -1,6 +1,6 @@
 "use server"
 
-import { cookies } from "next/headers"
+import { cookies as getCookies } from "next/headers"
 import { query } from "@/lib/db"
 
 // Separate type for login, which includes password_hash
@@ -38,18 +38,17 @@ export async function login(formData: FormData) {
     }
 
     // Set cookies
-    cookies().set("userId", user.id.toString(), {
+    const cookies = await getCookies()
+    await cookies.set("userId", user.id.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7,
-      path: "/",
     })
 
-    cookies().set("userRole", user.role, {
+    await cookies.set("userRole", user.role, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7,
-      path: "/",
     })
 
     return {
@@ -80,7 +79,8 @@ interface User {
 
 export async function getCurrentUser(): Promise<User | null> {
   try {
-    const userId = cookies().get("userId")?.value
+    const cookieStore = await getCookies()
+    const userId = cookieStore.get("userId")?.value
 
     if (!userId) {
       return null
