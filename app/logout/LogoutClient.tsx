@@ -1,4 +1,4 @@
-// /app/logout/LogoutClient.tsx
+// /app/logout/logout-client.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -9,6 +9,7 @@ export default function LogoutClient() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    // You could call an API route to log out, then redirect
     fetch('/api/logout', { method: 'POST' }).finally(() => {
       router.push('/login');
     });
