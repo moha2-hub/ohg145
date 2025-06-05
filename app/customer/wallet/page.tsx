@@ -108,6 +108,18 @@ export default function WalletPage() {
 
       const result = await requestTopUp(formData)
 
+      // Robust type check and error handling for server action result
+      if (!result || typeof result !== "object" || Array.isArray(result) || !("success" in result)) {
+        console.error("Unexpected response from requestTopUp:", result)
+        toast({
+          title: "Error",
+          description: "Unexpected server response. Please try again or contact support.",
+          variant: "destructive"
+        })
+        setIsLoading(false)
+        return
+      }
+
       if (result.success) {
         toast({
           title: "Success",
