@@ -80,7 +80,7 @@ export async function requestTopUp(formData: FormData) {
   const amount = Number.parseInt(formData.get("amount") as string)
   const paymentMethod = formData.get("paymentMethod") as string
   const notes = formData.get("notes") as string
-  const receipt = formData.get("receipt") as File
+  const receiptUrl = formData.get("receiptUrl") as string
 
   if (isNaN(amount) || amount <= 0) {
     return { success: false, message: "Invalid amount" }
@@ -90,15 +90,11 @@ export async function requestTopUp(formData: FormData) {
     return { success: false, message: "Payment method is required" }
   }
 
-  if (!receipt) {
+  if (!receiptUrl) {
     return { success: false, message: "Receipt is required" }
   }
 
   try {
-    // For simplicity, we'll use a placeholder URL for the receipt
-    // In a real application, you would upload the file to a storage service
-    const receiptUrl = "/placeholder-receipt.jpg"
-
     const result = await query(
       `INSERT INTO transactions (user_id, type, amount, status, payment_method, receipt_url, notes)
        VALUES ($1, 'top_up', $2, 'pending', $3, $4, $5) RETURNING id`,
