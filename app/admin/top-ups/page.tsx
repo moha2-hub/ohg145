@@ -160,12 +160,20 @@ export default function TopUpsPage() {
 
                         <div className="py-4">
                           <div className="aspect-video bg-gray-100 rounded-md overflow-hidden">
-                            {topUp.receipt_data?.startsWith("data:image") ? (
-                              <img
-                                src={topUp.receipt_data}
-                                alt="Payment Receipt"
-                                className="w-full h-full object-contain"
-                              />
+                            {topUp.receipt_url ? (
+                              topUp.receipt_url.endsWith(".pdf") ? (
+                                <iframe
+                                  src={topUp.receipt_url}
+                                  title="Payment Receipt PDF"
+                                  className="w-full h-full"
+                                />
+                              ) : (
+                                <img
+                                  src={topUp.receipt_url}
+                                  alt="Payment Receipt"
+                                  className="w-full h-full object-contain"
+                                />
+                              )
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <p className="text-gray-500">No receipt uploaded or invalid format</p>
