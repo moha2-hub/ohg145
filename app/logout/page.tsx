@@ -1,6 +1,6 @@
 // /app/logout/page.tsx
 import { Suspense } from 'react';
-import LogoutClient from './logout-client';
+import LogoutClient from './logoutclient';
 
 export default function LogoutPage() {
   return (
