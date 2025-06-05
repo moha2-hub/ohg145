@@ -83,10 +83,27 @@ export default function WalletPage() {
   async function handleTopUpRequest() {
     setIsLoading(true)
     try {
+      let receiptUrl = ""
+      if (receiptFile) {
+        const uploadData = new FormData()
+        uploadData.append("file", receiptFile)
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadData
+        })
+        const uploadJson = await uploadRes.json()
+        if (!uploadJson.success) {
+          toast({ title: "Error", description: uploadJson.message || "Failed to upload receipt.", variant: "destructive" })
+          setIsLoading(false)
+          return
+        }
+        receiptUrl = uploadJson.url
+      }
+
       const formData = new FormData()
       formData.append("amount", amount)
       formData.append("paymentMethod", paymentMethod)
-      if (receiptFile) formData.append("receipt", receiptFile)
+      formData.append("receiptUrl", receiptUrl)
       formData.append("notes", notes)
 
       const result = await requestTopUp(formData)
@@ -168,7 +185,10 @@ export default function WalletPage() {
               <div>
                 <p className="text-sm opacity-90">Available Balance</p>
                 <p className="text-3xl font-bold">{isLoading ? "..." : `${user?.points ?? 0} Points`}</p>
-                {user?.reserved_points > 0 && (
+                {/* Only show reserved points if > 0 and there is at least one non-rejected pending top-up */}
+                {user?.reserved_points > 0 && transactions.some(
+                  tx => tx.type === "top_up" && tx.status === "pending"
+                ) && (
                   <p className="text-sm opacity-75">{user.reserved_points} points reserved for pending orders</p>
                 )}
               </div>
@@ -218,8 +238,23 @@ export default function WalletPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="receipt">Receipt</Label>
-                      <Input id="receipt" type="file" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)} />
-                      <p className="text-xs text-muted-foreground">Upload your payment receipt</p>
+                      <Input
+                        id="receipt"
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Upload your payment receipt (image or PDF). Required.
+                      </p>
+                      {/* Show error if no file or invalid format */}
+                      {receiptFile === null && (
+                        <p className="text-xs text-red-600">No receipt uploaded.</p>
+                      )}
+                      {receiptFile &&
+                        !/^image\/(jpeg|png|gif|webp|bmp|svg\+xml)$|^application\/pdf$/.test(receiptFile.type) && (
+                          <p className="text-xs text-red-600">Invalid file format. Please upload an image or PDF.</p>
+                        )}
                     </div>
 
                     <div className="space-y-2">
@@ -230,7 +265,15 @@ export default function WalletPage() {
 
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleTopUpRequest} disabled={isLoading || !amount || !receiptFile}>
+                    <Button
+                      onClick={handleTopUpRequest}
+                      disabled={
+                        isLoading ||
+                        !amount ||
+                        !receiptFile ||
+                        !/^image\/|application\/pdf$/.test(receiptFile?.type || "")
+                      }
+                    >
                       {isLoading ? "Submitting..." : "Submit Request"}
                     </Button>
                   </DialogFooter>
